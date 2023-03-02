@@ -265,7 +265,7 @@ func (engine *Engine) internalIndexDocument(
 	if forceUpdate {
 		atomic.AddUint64(&engine.numForceUpdatingRequests, 1)
 	}
-	hash := murmur.Murmur3([]byte(fmt.Sprintf("%d%s", docId, data.Content)))
+	hash := murmur.Murmur3([]byte(fmt.Sprintf("%d", docId)))
 	engine.segmenterChannel <- segmenterRequest{
 		docId: docId, hash: hash, data: data, forceUpdate: forceUpdate}
 }
