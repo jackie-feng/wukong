@@ -87,6 +87,39 @@ func (indexer *Indexer) Close() {
 
 }
 
+func (indexer *Indexer) DebugDocIdx(id uint64) *types.DocumentIndex {
+	indexer.tableLock.RLock()
+	defer indexer.tableLock.RUnlock()
+	idxs := make([]types.KeywordIndex, 0)
+
+	for k, v := range indexer.tableLock.table {
+		pos, found := indexer.searchIndex(v, 0, indexer.getIndexLength(v)-1, id)
+		if found {
+			var frequency float32 = 0
+			if pos < len(v.frequencies) {
+				frequency = v.frequencies[pos]
+			}
+			starts := []int{}
+			if pos < len(v.locations) {
+				starts = v.locations[pos]
+			}
+
+			idx := types.KeywordIndex{
+				Text:      k,
+				Frequency: frequency,
+				Starts:    starts,
+			}
+			idxs = append(idxs, idx)
+		}
+	}
+
+	return &types.DocumentIndex{
+		DocId:       id,
+		Keywords:    idxs,
+		TokenLength: indexer.docTokenLengths[id],
+	}
+}
+
 // 从KeywordIndices中得到第i个文档的DocId
 func (indexer *Indexer) getDocId(ti *KeywordIndices, i int) uint64 {
 	return ti.docIds[i]
@@ -511,7 +544,7 @@ func (indexer *Indexer) searchIndex(
 // 假定第 i 个搜索键首字节出现在文本中的位置为 P_i，长度 L_i
 // 紧邻距离计算公式为
 //
-// 	ArgMin(Sum(Abs(P_(i+1) - P_i - L_i)))
+//	ArgMin(Sum(Abs(P_(i+1) - P_i - L_i)))
 //
 // 具体由动态规划实现，依次计算前 i 个 token 在每个出现位置的最优值。
 // 选定的 P_i 通过 tokenLocations 参数传回。

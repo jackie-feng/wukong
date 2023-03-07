@@ -1,8 +1,9 @@
 package engine
 
 import (
-	"github.com/huichen/wukong/types"
 	"sync/atomic"
+
+	"github.com/huichen/wukong/types"
 )
 
 type indexerAddDocumentRequest struct {
@@ -79,7 +80,7 @@ func (engine *Engine) indexerLookupWorker(shard int) {
 			var outputDocs []types.ScoredDocument
 			for _, d := range docs {
 				outputDocs = append(outputDocs, types.ScoredDocument{
-					DocId: d.DocId,
+					DocId:                 d.DocId,
 					TokenSnippetLocations: d.TokenSnippetLocations,
 					TokenLocations:        d.TokenLocations})
 			}

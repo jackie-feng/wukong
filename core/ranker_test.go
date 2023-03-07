@@ -1,10 +1,11 @@
 package core
 
 import (
-	"github.com/huichen/wukong/types"
-	"github.com/huichen/wukong/utils"
 	"reflect"
 	"testing"
+
+	"github.com/huichen/wukong/types"
+	"github.com/huichen/wukong/utils"
 )
 
 type DummyScoringFields struct {

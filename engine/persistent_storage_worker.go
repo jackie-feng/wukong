@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
-	"github.com/huichen/wukong/types"
 	"sync/atomic"
+
+	"github.com/huichen/wukong/types"
 )
 
 type persistentStorageIndexDocumentRequest struct {

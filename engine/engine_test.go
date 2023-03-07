@@ -100,6 +100,9 @@ func TestEngineIndexDocument(t *testing.T) {
 
 	AddDocs(&engine)
 
+	idx := engine.DebugDoc(1)
+	utils.Expect(t, "中国", idx.Keywords[0].Text)
+
 	outputs := engine.Search(types.SearchRequest{Text: "中国人口"})
 	utils.Expect(t, "2", len(outputs.Tokens))
 	utils.Expect(t, "中国", outputs.Tokens[0])

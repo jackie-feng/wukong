@@ -1,9 +1,10 @@
 package storage
 
 import (
-	"github.com/huichen/wukong/utils"
 	"os"
 	"testing"
+
+	"github.com/huichen/wukong/utils"
 )
 
 func TestOpenOrCreateKv(t *testing.T) {

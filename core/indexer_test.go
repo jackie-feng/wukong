@@ -257,6 +257,9 @@ func TestLookupDocIdsIndex(t *testing.T) {
 		},
 	}, true)
 
+	res := indexer.DebugDocIdx(7)
+	t.Logf("res: %v", res)
+
 	utils.Expect(t, "2 3 7 ", indicesToString(&indexer, "token1"))
 	utils.Expect(t, "1 2 3 4 ", indicesToString(&indexer, "token2"))
 	utils.Expect(t, "1 2 7 9 ", indicesToString(&indexer, "token3"))

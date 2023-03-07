@@ -12,6 +12,7 @@ import (
 
 	"github.com/huichen/murmur"
 	"github.com/huichen/sego"
+
 	"github.com/huichen/wukong/core"
 	"github.com/huichen/wukong/storage"
 	"github.com/huichen/wukong/types"
@@ -236,14 +237,15 @@ func (engine *Engine) Init(options types.EngineInitOptions) {
 // 将文档加入索引
 //
 // 输入参数：
-//  docId	      标识文档编号，必须唯一，docId == 0 表示非法文档（用于强制刷新索引），[1, +oo) 表示合法文档
-//  data	      见DocumentIndexData注释
-//  forceUpdate 是否强制刷新 cache，如果设为 true，则尽快添加到索引，否则等待 cache 满之后一次全量添加
+//
+//	docId	      标识文档编号，必须唯一，docId == 0 表示非法文档（用于强制刷新索引），[1, +oo) 表示合法文档
+//	data	      见DocumentIndexData注释
+//	forceUpdate 是否强制刷新 cache，如果设为 true，则尽快添加到索引，否则等待 cache 满之后一次全量添加
 //
 // 注意：
-//      1. 这个函数是线程安全的，请尽可能并发调用以提高索引速度
-//      2. 这个函数调用是非同步的，也就是说在函数返回时有可能文档还没有加入索引中，因此
-//         如果立刻调用Search可能无法查询到这个文档。强制刷新索引请调用FlushIndex函数。
+//  1. 这个函数是线程安全的，请尽可能并发调用以提高索引速度
+//  2. 这个函数调用是非同步的，也就是说在函数返回时有可能文档还没有加入索引中，因此
+//     如果立刻调用Search可能无法查询到这个文档。强制刷新索引请调用FlushIndex函数。
 func (engine *Engine) IndexDocument(docId uint64, data types.DocumentIndexData, forceUpdate bool) {
 	engine.internalIndexDocument(docId, data, forceUpdate)
 
@@ -273,13 +275,14 @@ func (engine *Engine) internalIndexDocument(
 // 将文档从索引中删除
 //
 // 输入参数：
-//  docId	      标识文档编号，必须唯一，docId == 0 表示非法文档（用于强制刷新索引），[1, +oo) 表示合法文档
-//  forceUpdate 是否强制刷新 cache，如果设为 true，则尽快删除索引，否则等待 cache 满之后一次全量删除
+//
+//	docId	      标识文档编号，必须唯一，docId == 0 表示非法文档（用于强制刷新索引），[1, +oo) 表示合法文档
+//	forceUpdate 是否强制刷新 cache，如果设为 true，则尽快删除索引，否则等待 cache 满之后一次全量删除
 //
 // 注意：
-//      1. 这个函数是线程安全的，请尽可能并发调用以提高索引速度
-//      2. 这个函数调用是非同步的，也就是说在函数返回时有可能文档还没有加入索引中，因此
-//         如果立刻调用Search可能无法查询到这个文档。强制刷新索引请调用FlushIndex函数。
+//  1. 这个函数是线程安全的，请尽可能并发调用以提高索引速度
+//  2. 这个函数调用是非同步的，也就是说在函数返回时有可能文档还没有加入索引中，因此
+//     如果立刻调用Search可能无法查询到这个文档。强制刷新索引请调用FlushIndex函数。
 func (engine *Engine) RemoveDocument(docId uint64, forceUpdate bool) {
 	if !engine.initialized {
 		log.Fatal("必须先初始化引擎")
@@ -417,6 +420,40 @@ func (engine *Engine) Search(request types.SearchRequest) (output types.SearchRe
 	output.NumDocs = numDocs
 	output.Timeout = isTimeout
 	return
+}
+
+func (engine *Engine) DebugDoc(docId uint64) *types.DocumentIndex {
+	hash := murmur.Murmur3([]byte(fmt.Sprintf("%d", docId)))
+	shard := engine.getShard(hash)
+	indexer := engine.indexers[shard]
+	return indexer.DebugDocIdx(docId)
+}
+
+func (engine *Engine) DebugSegment(docId uint64, content string) *types.DocumentIndex {
+	segments := engine.segmenter.Segment([]byte(content))
+	tokensMap := make(map[string][]int)
+	for _, segment := range segments {
+		token := segment.Token().Text()
+		if !engine.stopTokens.IsStopToken(token) {
+			tokensMap[token] = append(tokensMap[token], segment.Start())
+		}
+	}
+	numTokens := len(segments)
+	document := &types.DocumentIndex{
+		DocId:       docId,
+		TokenLength: float32(numTokens),
+		Keywords:    make([]types.KeywordIndex, len(tokensMap)),
+	}
+	iTokens := 0
+	for k, v := range tokensMap {
+		document.Keywords[iTokens] = types.KeywordIndex{
+			Text: k,
+			// 非分词标注的词频设置为0，不参与tf-idf计算
+			Frequency: float32(len(v)),
+			Starts:    v}
+		iTokens++
+	}
+	return document
 }
 
 // 阻塞等待直到所有索引添加完毕

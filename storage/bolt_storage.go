@@ -1,8 +1,9 @@
 package storage
 
 import (
-	"github.com/boltdb/bolt"
 	"time"
+
+	"github.com/boltdb/bolt"
 )
 
 var wukong_documents = []byte("wukong_documents")
