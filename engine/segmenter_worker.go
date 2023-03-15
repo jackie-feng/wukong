@@ -39,9 +39,7 @@ func (engine *Engine) segmenterWorker() {
 		} else {
 			// 否则载入用户输入的关键词
 			for _, t := range request.data.Tokens {
-				if !engine.stopTokens.IsStopToken(t.Text) {
-					tokensMap[t.Text] = t.Locations
-				}
+				tokensMap[t.Text] = t.Locations
 			}
 			numTokens = len(request.data.Tokens)
 		}
