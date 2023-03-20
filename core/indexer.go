@@ -366,6 +366,10 @@ func (indexer *Indexer) Lookup(
 	}
 	numDocs = 0
 
+	if len(tokens) == 0 {
+		return
+	}
+
 	// 合并关键词和标签为搜索键
 	keywords := make([]string, len(tokens)+len(labels))
 	copy(keywords, tokens)
